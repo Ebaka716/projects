@@ -1,211 +1,217 @@
-"use client"; // Required for state and effects
+"use client";
 
-import React, { useState, useEffect } from "react"; // Import React hooks
-import { useRouter } from 'next/navigation'; // Import useRouter
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge"; // Import Badge
 import {
-  Command,
-  CommandInput,
-  CommandList,    // Add CommandList
-  CommandEmpty,   // Add CommandEmpty
-  CommandGroup,   // Add CommandGroup
-  CommandItem,    // Add CommandItem
-} from "@/components/ui/command";
-// Removed imports for dropdown and icons
-// import { Send, Paperclip, ChevronDown, Filter } from 'lucide-react'; 
-// import {
-//   DropdownMenu,
-//   DropdownMenuContent,
-//   DropdownMenuItem,
-//   DropdownMenuLabel,
-//   DropdownMenuSeparator,
-//   DropdownMenuTrigger,
-// } from "@/components/ui/dropdown-menu";
-// Import Atom icon
-import { Atom } from "lucide-react"; 
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert"; // For showing errors
 
-// Sample Financial Data (add type)
-const FINANCIAL_DATA = [
-  { value: 'AAPL', type: 'ticker' },
-  { value: 'GOOGL', type: 'ticker' },
-  { value: 'MSFT', type: 'ticker' },
-  { value: 'AMZN', type: 'ticker' },
-  { value: 'TSLA', type: 'ticker' },
-  { value: 'NVDA', type: 'ticker' },
-  { value: 'S&P 500', type: 'index' },
-  { value: 'Dow Jones', type: 'index' },
-  { value: 'NASDAQ Composite', type: 'index' },
-  { value: 'Checking Account', type: 'account' },
-  { value: 'Savings Account', type: 'account' },
-  { value: 'Investment Portfolio', type: 'account' },
-  { value: 'Market Cap', type: 'term' },
-  { value: 'Dividend Yield', type: 'term' },
-  { value: 'P/E Ratio', type: 'term' },
-  { value: 'Inflation Rate', type: 'term' },
-  { value: 'Interest Rates', type: 'term' },
-  { value: 'GDP Growth', type: 'term' },
-  { value: 'Volatility (VIX)', type: 'term' },
-  { value: 'Bond', type: 'term' },
-  { value: 'ETF (Exchange Traded Fund)', type: 'term' },
-  { value: 'Mutual Fund', type: 'term' },
-  { value: 'Earnings Per Share (EPS)', type: 'metric' },
-  { value: 'Return on Investment (ROI)', type: 'metric' },
+// Define the structure for a demo
+interface DemoInfo {
+  id: string; // Unique ID used for password checking
+  title: string;
+  description: string;
+  url: string;
+  requiresPassword: boolean;
+  isExternal?: boolean; // Flag for external URLs
+}
+
+// Utility function to check if a URL is external
+const isExternalUrl = (url: string): boolean => {
+  try {
+    const parsedUrl = new URL(url);
+    return ['http:', 'https:'].includes(parsedUrl.protocol);
+  } catch (_e) {
+    // If parsing fails, assume it's an internal path
+    return false;
+  }
+};
+
+// List of demos - Add your other demos here later
+const demos: DemoInfo[] = [
+  {
+    id: 'theta-assistant', // ID for this demo
+    title: 'Theta Assistant',
+    description: 'An AI assistant for financial queries and market data.',
+    url: 'https://ui-shadcn-three.vercel.app/', // Corrected URL to the root
+    requiresPassword: true, // Updated password requirement
+    isExternal: true,
+  },
+  {
+    id: 'content-format', // New demo ID
+    title: 'Content Format Preview',
+    description: 'Create and preview your content in different formats.',
+    url: 'https://3v2.vercel.app/', // New demo URL
+    requiresPassword: true, // Requires password
+    isExternal: true,
+  },
+  {
+    id: 'confidence-demo', // ID matches the one in the API route
+    title: 'Confidence Score Demo',
+    description: 'A demonstration of confidence scoring features.',
+    url: '/confidence-demo', // Make sure this route exists or update as needed
+    requiresPassword: true, // This one requires a password
+    isExternal: false, // This is internal
+  },
+  // {
+  //   id: 'another-demo',
+  //   title: 'Another Demo',
+  //   description: 'Description for another demo.',
+  //   url: '/another-demo',
+  //   requiresPassword: true,
+  //   isExternal: false
+  // },
 ];
 
-// Combine data sources - Only include FINANCIAL_DATA
-const ALL_SUGGESTIONS = [...FINANCIAL_DATA];
+export default function DemosPage() {
+  const router = useRouter();
+  const [selectedDemo, setSelectedDemo] = useState<DemoInfo | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-export default function Home() {
-  const router = useRouter(); // Get router instance
-  const [inputValue, setInputValue] = useState("");
-  // Suggestions state now holds objects { value: string, type: string }
-  const [suggestions, setSuggestions] = useState<{ value: string, type: string }[]>([]);
-  const [isListOpen, setIsListOpen] = useState(false);
-  // Removed focusMode state
-  // const [focusMode, setFocusMode] = useState("Learning Center");
-
-  useEffect(() => {
-    if (inputValue) {
-      const filtered = ALL_SUGGESTIONS.filter(item =>
-        item.value.toLowerCase().includes(inputValue.toLowerCase())
-      );
-      setSuggestions(filtered);
-      setIsListOpen(filtered.length > 0);
+  // Function to navigate based on URL type
+  const navigateToDemo = (url: string) => {
+    if (isExternalUrl(url)) {
+      window.location.href = url; // Use window.location for external links
     } else {
-      setSuggestions([]);
-      setIsListOpen(false);
+      router.push(url); // Use router for internal links
     }
-  }, [inputValue]);
-
-  // Function to navigate to results page
-  const navigateToResults = (query: string) => {
-     if (!query) return; // Don't navigate if query is empty
-     router.push(`/results?query=${encodeURIComponent(query)}`);
-     setIsListOpen(false); // Close list after navigation
   };
 
-  // Updated handleSelect to use navigation function
-  const handleSelect = (value: string) => {
-    setInputValue(value);
-    navigateToResults(value);
-  };
-
-  // Handle form submission (Enter key)
-  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault(); // Prevent full page reload
-    navigateToResults(inputValue);
-  };
-
-  // Group suggestions by type for rendering
-  const groupedSuggestions = suggestions.reduce((acc, suggestion) => {
-    const key = suggestion.type;
-    if (!acc[key]) {
-      acc[key] = [];
+  const handleViewClick = (demo: DemoInfo) => {
+    if (demo.requiresPassword) {
+      setSelectedDemo(demo);
+      setPasswordInput(''); // Clear previous input
+      setError(null); // Clear previous errors
+      setIsDialogOpen(true);
+    } else {
+      navigateToDemo(demo.url); // Use the navigation function
     }
-    acc[key].push(suggestion);
-    return acc;
-  }, {} as Record<string, { value: string, type: string }[]>);
+  };
+
+  const handlePasswordSubmit = async () => {
+    if (!selectedDemo || !passwordInput) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/check-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          demoId: selectedDemo.id,
+          password: passwordInput,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.authorized) {
+        setIsDialogOpen(false);
+        navigateToDemo(selectedDemo.url); // Use the navigation function
+      } else {
+        setError(result.error || 'Invalid password.');
+      }
+    } catch (err) {
+      console.error("Password check failed:", err);
+      setError('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
-      {/* Add icon to title - No spin */}
-      <h1 className="mb-8 text-4xl font-semibold text-center flex items-center gap-3"> 
-        <Atom className="h-8 w-8" /> 
-        Theta Assistant
-      </h1>
+    <main className="flex min-h-screen flex-col items-center p-8 bg-background">
+      <h1 className="mb-12 text-4xl font-semibold">Project Demos</h1>
 
-      <form onSubmit={handleFormSubmit} className="w-full max-w-xl mb-6">
-        <Command className="rounded-lg border shadow-md overflow-visible relative">
-          <CommandInput
-            placeholder="Search financial terms..."
-            value={inputValue}
-            onValueChange={(value) => {
-               setInputValue(value);
-            }}
-            onFocus={() => setIsListOpen(suggestions.length > 0 && !!inputValue)}
-            onKeyDown={(event: React.KeyboardEvent) => {
-              if (event.key === 'Enter' && inputValue) {
-                event.preventDefault(); 
-                navigateToResults(inputValue);
-              }
-            }}
-            className=""
-          />
-
-          {/* Conditionally render the suggestion list */}
-          {isListOpen && (
-            <> 
-              {/* Clickable overlay to close list */}
-              <div 
-                className="fixed inset-0 z-10 bg-transparent" 
-                onClick={() => setIsListOpen(false)}
-              />
-              {/* Suggestion List (increased z-index, explicit dark bg) */}
-              <CommandList className="absolute top-full mt-1 w-full rounded-md border bg-white dark:bg-neutral-900 shadow-lg z-20">
-                {suggestions.length > 0 ? (
-                  <>
-                    {['ticker', 'index', 'account', 'term', 'metric'].map(type => 
-                      groupedSuggestions[type] && (
-                        <CommandGroup heading={type.charAt(0).toUpperCase() + type.slice(1) + 's'} key={type} className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground dark:[&_[cmdk-group-heading]]:text-neutral-400">
-                           {groupedSuggestions[type].map((suggestion) => (
-                            <CommandItem
-                              key={`${type}-${suggestion.value}`}
-                              value={suggestion.value}
-                              onSelect={() => handleSelect(suggestion.value)}
-                              className="flex items-center gap-2 text-popover-foreground"
-                            >
-                              <Badge variant="secondary" className="capitalize">{suggestion.type}</Badge>
-                              <span>{suggestion.value}</span>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      )
-                   )}
-                  </>
-                ) : (
-                  <CommandEmpty>No results found.</CommandEmpty>
-                )}
-              </CommandList>
-            </>
-          )}
-        </Command>
-        <button type="submit" hidden />
-      </form>
-
-      {/* Container for wrapping icebreaker buttons, aligned with command bar */}
-      <div className="flex flex-wrap gap-2 justify-center w-full max-w-xl">
-        <Button 
-          variant="outline"
-          onClick={() => navigateToResults('How\'s AAPL doing?')}
-        >
-          How&apos;s AAPL doing?
-        </Button>
-        <Button 
-          variant="outline"
-          onClick={() => router.push('/advisor')}
-        >
-          Check in with an Advisor
-        </Button>
-        <Button 
-          variant="outline"
-          onClick={() => navigateToResults('Market Overview')}
-        >
-          Market Overview
-        </Button>
-        <Button 
-          variant="outline"
-          onClick={() => navigateToResults('Explain P/E Ratio')}
-        >
-          Explain P/E Ratio
-        </Button>
-        <Button 
-          variant="outline"
-          onClick={() => navigateToResults('What news has affected me today?')}
-        >
-          What news has affected me today?
-        </Button>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full">
+        {demos.map((demo) => (
+          <Card key={demo.id}>
+            <CardHeader>
+              <CardTitle>{demo.title}</CardTitle>
+              <CardDescription>{demo.description}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* URL Display Removed */}
+            </CardContent>
+            <CardFooter>
+              <Button 
+                onClick={() => handleViewClick(demo)} 
+                className="w-full bg-black text-white hover:bg-black/80"
+              >
+                View Demo
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
       </div>
+
+      {/* Password Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Password Required</DialogTitle>
+            <DialogDescription>
+              Enter the password to access the &quot;{selectedDemo?.title}&quot; demo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="password" className="text-right">
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                className="col-span-3"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handlePasswordSubmit();
+                  }
+                }}
+              />
+            </div>
+            {error && (
+               <Alert variant="destructive">
+                 <AlertDescription>{error}</AlertDescription>
+               </Alert>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              type="submit"
+              onClick={handlePasswordSubmit}
+              disabled={isLoading || !passwordInput}
+            >
+              {isLoading ? 'Verifying...' : 'Submit'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

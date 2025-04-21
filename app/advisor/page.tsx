@@ -1,9 +1,18 @@
 "use client";
 
 import React from "react";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 export default function AdvisorPage() {
   const [date, setDate] = React.useState<Date | undefined>(new Date());
@@ -34,20 +43,35 @@ export default function AdvisorPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-                <CardTitle>Schedule an Appointment</CardTitle>
-                <CardDescription>Select a date to request an appointment. Further details will be confirmed via email.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex justify-center">
-                <Calendar
+          <div className="space-y-3">
+            <h2 className="text-2xl font-semibold">Schedule an Appointment</h2>
+            <p className="text-sm text-muted-foreground">Select a date to request an appointment. Further details will be confirmed via email.</p>
+            <div className="pt-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-[280px] justify-start text-left font-normal",
+                        !date && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {date ? format(date, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-popover" align="start">
+                  <Calendar
                     mode="single"
                     selected={date}
                     onSelect={setDate}
-                    className="rounded-md border"
-                 />
-             </CardContent>
-          </Card>
+                    disabled={(d) => d < new Date(new Date().setDate(new Date().getDate() - 1))}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+             </div>
+          </div>
         </div>
       </main>
     </div>
