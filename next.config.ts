@@ -3,7 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
 
-  // Add redirect from root to /demos page
+  // Redirect removed - this deployment should show the root page directly
+  /*
   async redirects() {
     return [
       {
@@ -13,6 +14,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  */
 };
 
 export default nextConfig;
