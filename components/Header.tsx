@@ -16,9 +16,10 @@ import {
 
 interface HeaderProps {
   toggleMobileMenu: () => void;
+  title?: string;
 }
 
-export function Header({ toggleMobileMenu }: HeaderProps) {
+export function Header({ toggleMobileMenu, title }: HeaderProps) {
   const pathname = usePathname();
   const isConfidenceDemoPage = pathname === '/confidence-demo';
 
@@ -55,10 +56,9 @@ export function Header({ toggleMobileMenu }: HeaderProps) {
             </TooltipContent>
           </Tooltip>
           
-          {/* Revert title div */} 
+          {/* Use title prop or default */}
           <div className="font-bold text-primary text-xl"> 
-            {/* Removed Atom icon */}
-            Theta Corp
+            {title || 'Theta Corp'} 
           </div>
         </div>
 

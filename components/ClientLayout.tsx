@@ -30,6 +30,9 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
       setIsMobileMenuOpen(false);
   }, [pathname]);
 
+  // Determine if the current page is the demos page
+  const isDemosPage = pathname === '/demos';
+
   // Determine background based on route
   const isContentPage = pathname.startsWith('/results') 
                      || pathname.startsWith('/advisor')
@@ -39,24 +42,29 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     ? "bg-[#F9F7F5] dark:bg-neutral-900" 
     : "bg-background"; // Default background
 
+  // Determine header title based on route
+  const headerTitle = isDemosPage ? "Projects" : undefined; // Undefined will use the default in Header
+
   return (
     <TooltipProvider>
       <ConfidenceProvider>
-        <Header toggleMobileMenu={toggleMobileMenu} />
+        <Header toggleMobileMenu={toggleMobileMenu} title={headerTitle} />
         
         <div className={cn("flex h-screen pt-16")}>
-          <Sidebar 
-            isDesktopCollapsed={isDesktopCollapsed} 
-            toggleDesktopSidebar={toggleDesktopSidebar} 
-            isMobileMenuOpen={isMobileMenuOpen}
-            closeMobileMenu={() => setIsMobileMenuOpen(false)}
-          />
+          {!isDemosPage && (
+            <Sidebar 
+              isDesktopCollapsed={isDesktopCollapsed} 
+              toggleDesktopSidebar={toggleDesktopSidebar} 
+              isMobileMenuOpen={isMobileMenuOpen}
+              closeMobileMenu={() => setIsMobileMenuOpen(false)}
+            />
+          )}
           <div 
             id="content-scroll-wrapper" 
             className={cn(
               "flex-1",
               backgroundClass,
-              isDesktopCollapsed ? "md:ml-16" : "md:ml-52",
+              !isDemosPage && (isDesktopCollapsed ? "md:ml-16" : "md:ml-52"),
               pathname === '/' 
                 ? "flex flex-col items-center justify-center overflow-hidden"
                 : "overflow-y-auto p-6"
@@ -67,7 +75,8 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
               className={cn(pathname === '/' ? '' : "mb-6")}
             >
               <div className={cn(
-                "w-full max-w-[800px] mx-auto",
+                "w-full mx-auto",
+                isDemosPage ? "max-w-6xl" : "max-w-[800px]",
                 pathname === '/' ? 'p-6' : ''
               )}>
                 {children}
