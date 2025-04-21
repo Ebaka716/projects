@@ -50,7 +50,7 @@ const demos: DemoInfo[] = [
     id: 'theta-assistant', // ID for this demo
     title: 'Theta Assistant',
     description: 'An AI assistant for financial queries and market data.',
-    url: 'https://ui-shadcn-three.vercel.app/', // Updated URL
+    url: 'https://ui-shadcn-three.vercel.app/', // Corrected URL to the root
     requiresPassword: true, // Updated password requirement
     isExternal: true,
   },
@@ -157,8 +157,11 @@ export default function DemosPage() {
               {/* URL Display Removed */}
             </CardContent>
             <CardFooter>
-              <Button onClick={() => handleViewClick(demo)} className="w-full">
-                View Demo {demo.isExternal ? '(External)' : ''}
+              <Button 
+                onClick={() => handleViewClick(demo)} 
+                className="w-full bg-black text-white hover:bg-black/80"
+              >
+                View Demo
               </Button>
             </CardFooter>
           </Card>
