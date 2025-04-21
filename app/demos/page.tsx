@@ -38,7 +38,7 @@ const isExternalUrl = (url: string): boolean => {
   try {
     const parsedUrl = new URL(url);
     return ['http:', 'https:'].includes(parsedUrl.protocol);
-  } catch (e) {
+  } catch (_e) {
     // If parsing fails, assume it's an internal path
     return false;
   }
@@ -171,7 +171,7 @@ export default function DemosPage() {
           <DialogHeader>
             <DialogTitle>Password Required</DialogTitle>
             <DialogDescription>
-              Enter the password to access the "{selectedDemo?.title}" demo.
+              Enter the password to access the &quot;{selectedDemo?.title}&quot; demo.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
