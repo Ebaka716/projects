@@ -11,25 +11,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert"; // For showing errors
 
 // Define the structure for a demo
 interface DemoInfo {
-  id: string; // Unique ID used for password checking
+  id: string; // Unique ID used for password checking (kept for key prop)
   title: string;
   description: string;
   url: string;
-  requiresPassword: boolean;
+  requiresPassword: boolean; // Will be set to false
   isExternal?: boolean; // Flag for external URLs
 }
 
@@ -44,32 +33,25 @@ const isExternalUrl = (url: string): boolean => {
   }
 };
 
-// List of demos - Add your other demos here later
+// List of demos - Passwords no longer required
 const demos: DemoInfo[] = [
   {
-    id: 'theta-assistant', // ID for this demo
+    id: 'theta-assistant',
     title: 'Theta Assistant',
     description: 'An AI assistant for financial queries and market data.',
-    url: 'https://ui-shadcn-three.vercel.app/', // Corrected URL to the root
-    requiresPassword: true, // Updated password requirement
+    url: 'https://ui-shadcn-three.vercel.app/',
+    requiresPassword: false, // Changed
     isExternal: true,
   },
   {
-    id: 'content-format', // New demo ID
+    id: 'content-format',
     title: 'Content Format Preview',
     description: 'Create and preview your content in different formats.',
-    url: 'https://3v2.vercel.app/', // New demo URL
-    requiresPassword: true, // Requires password
+    url: 'https://3v2.vercel.app/',
+    requiresPassword: false, // Changed
     isExternal: true,
   },
-  {
-    id: 'confidence-demo', // ID matches the one in the API route
-    title: 'Confidence Score Demo',
-    description: 'A demonstration of confidence scoring features.',
-    url: '/confidence-demo', // Make sure this route exists or update as needed
-    requiresPassword: true, // This one requires a password
-    isExternal: false, // This is internal
-  },
+  // Removed Confidence Score Demo
   // {
   //   id: 'another-demo',
   //   title: 'Another Demo',
@@ -82,64 +64,19 @@ const demos: DemoInfo[] = [
 
 export default function DemosPage() {
   const router = useRouter();
-  const [selectedDemo, setSelectedDemo] = useState<DemoInfo | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [passwordInput, setPasswordInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Function to navigate based on URL type
   const navigateToDemo = (url: string) => {
     if (isExternalUrl(url)) {
-      window.location.href = url; // Use window.location for external links
+      window.location.href = url;
     } else {
-      router.push(url); // Use router for internal links
+      router.push(url);
     }
   };
 
+  // Simplified handler - directly navigates
   const handleViewClick = (demo: DemoInfo) => {
-    if (demo.requiresPassword) {
-      setSelectedDemo(demo);
-      setPasswordInput(''); // Clear previous input
-      setError(null); // Clear previous errors
-      setIsDialogOpen(true);
-    } else {
-      navigateToDemo(demo.url); // Use the navigation function
-    }
-  };
-
-  const handlePasswordSubmit = async () => {
-    if (!selectedDemo || !passwordInput) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/check-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          demoId: selectedDemo.id,
-          password: passwordInput,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok && result.authorized) {
-        setIsDialogOpen(false);
-        navigateToDemo(selectedDemo.url); // Use the navigation function
-      } else {
-        setError(result.error || 'Invalid password.');
-      }
-    } catch (err) {
-      console.error("Password check failed:", err);
-      setError('An error occurred. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    navigateToDemo(demo.url);
   };
 
   return (
@@ -157,8 +94,8 @@ export default function DemosPage() {
               {/* URL Display Removed */}
             </CardContent>
             <CardFooter>
-              <Button 
-                onClick={() => handleViewClick(demo)} 
+              <Button
+                onClick={() => handleViewClick(demo)}
                 className="w-full bg-black text-white hover:bg-black/80"
               >
                 View Demo
@@ -167,51 +104,6 @@ export default function DemosPage() {
           </Card>
         ))}
       </div>
-
-      {/* Password Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Password Required</DialogTitle>
-            <DialogDescription>
-              Enter the password to access the &quot;{selectedDemo?.title}&quot; demo.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="password" className="text-right">
-                Password
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                value={passwordInput}
-                onChange={(e) => setPasswordInput(e.target.value)}
-                className="col-span-3"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handlePasswordSubmit();
-                  }
-                }}
-              />
-            </div>
-            {error && (
-               <Alert variant="destructive">
-                 <AlertDescription>{error}</AlertDescription>
-               </Alert>
-            )}
-          </div>
-          <DialogFooter>
-            <Button
-              type="submit"
-              onClick={handlePasswordSubmit}
-              disabled={isLoading || !passwordInput}
-            >
-              {isLoading ? 'Verifying...' : 'Submit'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </main>
   );
 }
