@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import React from 'react';
 import { ThemeProvider } from "@/components/theme-provider";
+import { ConfidenceProvider } from '@/context/ConfidenceContext';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +34,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <ConfidenceProvider>
+            {children}
+          </ConfidenceProvider>
         </ThemeProvider>
       </body>
     </html>
